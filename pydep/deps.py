@@ -1,17 +1,19 @@
-from dataclasses import dataclass
-from typing import List, Mapping
-from src.rels import VersionRel, Version
+from __future__ import annotations
+from typing import List
+from pydep.rels import VersionRel, Version
 
 class Dependency:
     def __init__(
         self,
         name: str,
         versions: List[Version],
-        hints: List[VersionRel]
+        hints: List[VersionRel],
+        depends: List[str]
     ) -> None:
         self.name = name
         self.versions = sorted(versions)
         self.hints = hints
+        self.depends = depends
 
     def __eq__(self, other: object) -> bool:
         if self.__class__ is other.__class__:
@@ -23,9 +25,4 @@ class Dependency:
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}: {self.name}'
-
-@dataclass
-class DepsGraph:
-    nodes: List[Dependency]
-    adjs: Mapping[Dependency, List[Dependency]]
 

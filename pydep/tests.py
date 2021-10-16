@@ -2,18 +2,11 @@ from dataclasses import dataclass
 from typing import List, Mapping
 from pathlib import Path
 from collections import namedtuple
-from src.rels import Version
-from src.deps import Dependency
+from pydep.rels import Version
+from pydep.deps import Dependency
 
 class Test:
-    '''
-    A test:
-        `fixed_versions` maps each dependency to a selected version.
-    '''
-
-    fixed_versions: Mapping[Dependency, Version]
-
-    def run(self) -> bool:
+    def run(self, fixed_versions: Mapping[Dependency, Version]) -> bool:
         raise NotImplementedError
 
 ValidInterval = namedtuple('ValidInterval', ['min', 'max'])
@@ -28,10 +21,10 @@ class VirtualTest(Test):
 
     true_when: List[Mapping[Dependency, ValidInterval]]
 
-    def run(self) -> bool:
+    def run(self, fixed_versions: Mapping[Dependency, Version]) -> bool:
         for conditions in self.true_when:
             for dep, interval in conditions.items():
-                cur_ver = self.fixed_versions[dep]
+                cur_ver = fixed_versions[dep]
                 
                 if interval.min > cur_ver or cur_ver > interval.max:
                     break

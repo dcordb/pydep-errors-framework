@@ -1,11 +1,11 @@
 from typing import List, Mapping
-from src.tests import Test
-from src.rels import Version
-from src.deps import DepsGraph, Dependency
+from pydep.tests import Test
+from pydep.rels import Version
+from pydep.deps import Dependency
 
 class Algorithm:
-    def __init__(self, graph: DepsGraph, tests: List[Test]) -> None:
-        self.graph = graph
+    def __init__(self, deps: List[Dependency], tests: List[Test]) -> None:
+        self.deps = deps
         self.tests = tests
 
     def run(self) -> Mapping[Dependency, Version]:

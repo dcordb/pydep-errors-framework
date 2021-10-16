@@ -19,3 +19,10 @@ class LessThan(VersionRel):
 class GreaterThan(VersionRel):
     pass
 
+EQUIVS = {
+    '==': Eq,
+    '>=': GreaterThan,
+    '<=': LessThan,
+    '!=': NotEq
+}
+

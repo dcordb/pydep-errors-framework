@@ -1,0 +1,16 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "pydep"
+authors = [{name = "dcordb"}]
+dynamic = ["version", "description"]
+
+dependencies = [
+    "tomli",
+    "httpx"
+]
+
+[project.scripts]
+pydep = "pydep.__main__:main"
