@@ -10,7 +10,8 @@ dynamic = ["version", "description"]
 dependencies = [
     "tomli",
     "httpx",
-    "typer"
+    "typer",
+    "packaging"
 ]
 
 [project.scripts]

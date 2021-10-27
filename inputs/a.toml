@@ -2,18 +2,15 @@
 
 [dependencies.A]
 versions = [ "1.2", "1.5", "2", "1", "5.3", "2.4" ]
-hints = [ ">=1.2.5", "<=6.3.2" ]
-depends = [ "B", "C" ]
+specifier = ">=1.2.5,<=6.3.2"
 
 [dependencies.B]
 versions = [ "1.2", "3.1", "5.3", "2.71" ]
-hints = [ "==1.2.9" ]
-depends = []
+specifier = "==1.2.9"
 
 [dependencies.C]
 versions = [ "1.546.3", "2.4.7.3.7", "901.123.4357.7" ]
-hints = [ "!=2.5.35.4" ]
-depends = [ "A" ]
+specifier = "!=2.5.35.4"
 
 [[tests]]
 

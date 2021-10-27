@@ -1,19 +1,18 @@
 from __future__ import annotations
 from typing import List
-from pydep.versions import VersionRel, Version
+from packaging.version import Version
+from packaging.specifiers import SpecifierSet
 
 class Dependency:
     def __init__(
         self,
         name: str,
         versions: List[Version],
-        hints: List[VersionRel],
-        depends: List[str]
+        specifier: SpecifierSet,
     ) -> None:
         self.name = name
         self.versions = sorted(versions)
-        self.hints = hints
-        self.depends = depends
+        self.specifier = specifier
 
     def __eq__(self, other: object) -> bool:
         if self.__class__ is other.__class__:

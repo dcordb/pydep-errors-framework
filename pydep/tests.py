@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import List, Mapping
 from pathlib import Path
-from pydep.versions import Version, VersionRange
+from packaging.version import Version
+from pydep.versions import VersionRange
 from pydep.deps import Dependency
 
 class Test:

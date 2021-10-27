@@ -1,6 +1,6 @@
 from typing import List, Mapping
+from packaging.version import Version
 from pydep.tests import Test
-from pydep.rels import Version
 from pydep.deps import Dependency
 
 class Algorithm:
