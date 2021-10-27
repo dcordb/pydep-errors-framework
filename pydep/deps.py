@@ -3,6 +3,7 @@ from typing import List
 from packaging.version import Version
 from packaging.specifiers import SpecifierSet
 
+
 class Dependency:
     def __init__(
         self,
@@ -23,5 +24,11 @@ class Dependency:
         return hash(self.name)
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}: {self.name}'
+        return f"{self.__class__.__name__}: {self.name}"
 
+    def spec_versions(self) -> List[Version]:
+        """
+        Returns a list of versions that conforms with the specifier
+        """
+
+        return [ver for ver in self.versions if ver in self.specifier]

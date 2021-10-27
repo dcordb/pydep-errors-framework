@@ -14,5 +14,8 @@ dependencies = [
     "packaging"
 ]
 
+[project.optional-dependencies]
+dev = ["black"]
+
 [project.scripts]
 pydep = "pydep.__main__:entrypoint"
