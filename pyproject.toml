@@ -19,3 +19,6 @@ dev = ["black"]
 
 [project.scripts]
 pydep = "pydep.__main__:entrypoint"
+
+[tool.black]
+target-version = ['py39']

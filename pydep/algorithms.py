@@ -1,15 +1,19 @@
-from typing import List, Mapping
-from packaging.version import Version
+from typing import List
+from pydep.versions import VersionMapping
+from pydep.costs import CostFunction
 from pydep.tests import Test
 from pydep.deps import Dependency
 
 
 class Algorithm:
-    def __init__(self, deps: List[Dependency], tests: List[Test]) -> None:
+    def __init__(
+        self, deps: List[Dependency], tests: List[Test], cost_func: CostFunction
+    ) -> None:
         self.deps = deps
         self.tests = tests
+        self.cost_func = cost_func
 
-    def run(self) -> Mapping[Dependency, Version]:
+    def run(self) -> VersionMapping:
         """
         Run the algorithm, it returns a mapping of each dependency to the
         selected version.

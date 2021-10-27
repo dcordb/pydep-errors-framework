@@ -1,5 +1,9 @@
 from dataclasses import dataclass
 from packaging.version import Version
+from typing import Mapping
+from pydep.deps import Dependency
+
+VersionMapping = Mapping[Dependency, Version]
 
 
 class VersionRangeException(Exception):
