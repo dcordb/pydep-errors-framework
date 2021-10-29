@@ -15,7 +15,9 @@ def virtual(testcase: FileText):
     d = tomli.loads(testcase.read())
     deps, tests = parse_virtual_config(d)
 
-    solver = Backtrack(deps, LinearRunner(tests), costs.Sum(), opts.Max())
+    solver = Backtrack(
+        deps, LinearRunner(tests), costs.Sum(costs.version_to_float), opts.Max()
+    )
     resp = solver.run()
 
     print(resp)
