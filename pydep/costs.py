@@ -11,13 +11,10 @@ def tuple_to_int(tup: Tuple[int, ...]):
 
 
 class CostFunction:
-    def __init__(self, mapping: VersionMapping) -> None:
-        self.mapping = mapping
-
-    def __call__(self) -> float:
+    def __call__(self, mapping: VersionMapping) -> float:
         raise NotImplementedError
 
 
 class Sum(CostFunction):
-    def __call__(self) -> float:
-        return sum(tuple_to_int(v.release) for v in self.mapping.values())
+    def __call__(self, mapping: VersionMapping) -> float:
+        return sum(tuple_to_int(v.release) for v in mapping.values())

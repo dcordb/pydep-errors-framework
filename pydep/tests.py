@@ -1,12 +1,14 @@
 from dataclasses import dataclass
-from typing import List, Mapping
+from typing import List, Mapping, Sequence
 from pathlib import Path
 from pydep.versions import VersionRange, VersionMapping
 from pydep.deps import Dependency
 
 
 class Test:
-    def run(self, fixed_versions: VersionMapping) -> bool:
+    """Abstract base class for Tests"""
+
+    def run(self, pinned_vers: VersionMapping) -> bool:
         raise NotImplementedError
 
 
@@ -18,12 +20,12 @@ class VirtualTest(Test):
         this virtual test.
     """
 
-    true_when: List[Mapping[Dependency, VersionRange]]
+    true_when: Sequence[Mapping[Dependency, VersionRange]]
 
-    def run(self, fixed_versions: VersionMapping) -> bool:
+    def run(self, pinned_vers: VersionMapping) -> bool:
         for conditions in self.true_when:
             for dep, range in conditions.items():
-                cur_ver = fixed_versions[dep]
+                cur_ver = pinned_vers[dep]
 
                 if range.min > cur_ver or cur_ver > range.max:
                     break
@@ -37,3 +39,16 @@ class VirtualTest(Test):
 @dataclass
 class PytestDirTest(Test):
     directory: Path
+
+
+class TestRunner:
+    def __init__(self, tests: Sequence[Test]) -> None:
+        self.tests = tests
+
+    def run_all(self, pinned_vers: VersionMapping) -> List[bool]:
+        raise NotImplementedError
+
+
+class LinearRunner(TestRunner):
+    def run_all(self, pinned_vers: VersionMapping) -> List[bool]:
+        return [test.run(pinned_vers) for test in self.tests]

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List
+from typing import List, Sequence
 from packaging.version import Version
 from packaging.specifiers import SpecifierSet
 
@@ -8,7 +8,7 @@ class Dependency:
     def __init__(
         self,
         name: str,
-        versions: List[Version],
+        versions: Sequence[Version],
         specifier: SpecifierSet,
     ) -> None:
         self.name = name
@@ -18,7 +18,7 @@ class Dependency:
     def __eq__(self, other: object) -> bool:
         if self.__class__ is other.__class__:
             return self.name == other.name
-        raise NotImplemented
+        return NotImplemented
 
     def __hash__(self) -> int:
         return hash(self.name)
