@@ -34,10 +34,13 @@ def dockerpy(
         dir_okay=True,
         readable=True,
         resolve_path=True,
-    )
+    ),
+    extras: str = typer.Option("", help="Extras to install with pip"),
 ):
     cmd = PytestCmd("python -m pytest")
-    depsmgr = Pip(["test"])
+
+    args = [] if not extras else extras.split(",")
+    depsmgr = Pip(args)
 
     runner = DockerPyRunner(path, depsmgr, [cmd], "3.9-slim")
     mapping = runner.init_deps_mapping()
