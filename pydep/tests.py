@@ -98,8 +98,8 @@ class DockerPyRunner(ExternalRunner):
             "RUN python -m venv $VIRTUAL_ENV",
             "ENV PATH=$VIRTUAL_ENV/bin:$PATH",
             "RUN pip config set global.disable-pip-version-check true",
-            f"WORKDIR /home/pydep/app",
-            f"COPY . .",
+            "COPY --chown=pydep:pydep . /home/pydep/app/",
+            "WORKDIR /home/pydep/app",
         ]
 
     def init_deps_mapping(self) -> VersionMapping:
