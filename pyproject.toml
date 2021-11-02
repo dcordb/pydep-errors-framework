@@ -11,7 +11,8 @@ dependencies = [
     "tomli",
     "httpx",
     "typer",
-    "packaging"
+    "packaging",
+    "docker"
 ]
 
 [project.optional-dependencies]

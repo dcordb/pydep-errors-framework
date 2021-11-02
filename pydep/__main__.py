@@ -1,9 +1,11 @@
 import tomli
 import typer
 from typer import FileText
+from pathlib import Path
 from pydep.parser import parse_virtual_config
 from pydep.algorithms import Backtrack
-from pydep.tests import LinearRunner
+from pydep.tests import PytestCmd, LinearRunner, DockerPyRunner
+from pydep.depsmgr import Pip
 from pydep import costs
 from pydep import opts
 
@@ -21,6 +23,29 @@ def virtual(testcase: FileText):
     resp = solver.run()
 
     print(resp)
+
+
+@app.command()
+def dockerpy(
+    path: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        resolve_path=True,
+    )
+):
+    cmd = PytestCmd("python -m pytest")
+    depsmgr = Pip(["test"])
+
+    runner = DockerPyRunner(path, depsmgr, [cmd], "3.9-slim")
+    mapping = runner.init_deps_mapping()
+
+    print(mapping)
+
+    res = runner.run_all(mapping)
+    print(res)
 
 
 def entrypoint():
