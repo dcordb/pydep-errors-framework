@@ -8,10 +8,12 @@ from pathlib import Path
 from pydep.depsmgr import DepsManager
 from pydep.versions import VersionRange, VersionMapping
 from pydep.deps import Dependency
+from pydep.logs import stream_logger
 import docker.api.build
 
 # taken from here: https://github.com/docker/docker-py/issues/2105#issuecomment-613685891
 docker.api.build.process_dockerfile = lambda dockerfile, _: ("Dockerfile", dockerfile)  # type: ignore
+logger = stream_logger(__name__)
 
 
 class Test:
@@ -103,11 +105,14 @@ class DockerPyRunner(ExternalRunner):
         ]
 
     def init_deps_mapping(self) -> VersionMapping:
+        logger.info("Initializing base dockerfile")
+
         dockerfile = self._base_dockerfile()
 
         dockerfile.append("RUN " + self.depsmgr.cmd_init_pinned_deps())
         dockerfile.append("CMD pip freeze")
         dfstr = "\n".join(dockerfile)
+        logger.debug(dfstr)
 
         dockerclient = docker.from_env()
         img, _ = dockerclient.images.build(
@@ -128,9 +133,12 @@ class DockerPyRunner(ExternalRunner):
         return mapping
 
     def run_all(self, pinned_vers: VersionMapping) -> List[bool]:
+        logger.info("Running tests")
+
         dockerfile = self._base_dockerfile()
         dockerfile.append("RUN " + self.depsmgr.cmd_install_deps(pinned_vers))
         dfstr = "\n".join(dockerfile)
+        logger.debug(dfstr)
 
         dockerclient = docker.from_env()
         img, _ = dockerclient.images.build(
@@ -140,14 +148,13 @@ class DockerPyRunner(ExternalRunner):
         res = []
         for test in self.tests:
             cmd = test.run()  # type: ignore
-            print(f"running {cmd}")
+            logger.debug(f"Running {cmd}")
             success = True
 
             try:
-                output = dockerclient.containers.run(img.id, remove=True, command=cmd)
-                print(output.decode())  # type: ignore
+                dockerclient.containers.run(img.id, remove=True, command=cmd)
             except docker.errors.ContainerError as err:
-                print(err)
+                logger.warning(err)
                 success = False
 
             res.append(success)

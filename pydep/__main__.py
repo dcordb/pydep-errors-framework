@@ -34,6 +34,7 @@ def dockerpy(
         dir_okay=True,
         readable=True,
         resolve_path=True,
+        help="Path to the project to run",
     ),
     extras: str = typer.Option("", help="Extras to install with pip"),
 ):
