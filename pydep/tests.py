@@ -1,5 +1,7 @@
 import docker
 import docker.errors
+import enum
+from typing import Optional
 from dataclasses import dataclass
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
@@ -54,8 +56,18 @@ class TestCmd(Test):
 
 @dataclass
 class PytestCmd(TestCmd):
+    cmd: Optional[str] = None
+
+    def __post_init__(self):
+        if self.cmd is None:
+            self.cmd = "pytest"
+
     def run(self):
         return self.cmd
+
+
+class TestCmdsEnum(str, enum.Enum):
+    pytest = "PytestCmd"
 
 
 class TestRunner:
@@ -85,11 +97,18 @@ class ExternalRunner(TestRunner):
 
 class DockerPyRunner(ExternalRunner):
     def __init__(
-        self, project: Path, depsmgr: DepsManager, tests: Sequence[TestCmd], imgtag: str
+        self,
+        project: Path,
+        depsmgr: DepsManager,
+        tests: Sequence[TestCmd],
+        img_basename: str,
+        pytag: str,
     ) -> None:
         super().__init__(project, depsmgr, tests)
 
-        self.img = f"python:{imgtag}"
+        self.img = f"python:{pytag}"
+        self.img_basename = img_basename
+        self.workdir = "/home/pydep/app"
 
     def _base_dockerfile(self):
         return [
@@ -100,8 +119,9 @@ class DockerPyRunner(ExternalRunner):
             "RUN python -m venv $VIRTUAL_ENV",
             "ENV PATH=$VIRTUAL_ENV/bin:$PATH",
             "RUN pip config set global.disable-pip-version-check true",
-            "COPY --chown=pydep:pydep . /home/pydep/app/",
-            "WORKDIR /home/pydep/app",
+            f"COPY --chown=pydep:pydep . {self.workdir}/",
+            f"WORKDIR {self.workdir}",
+            f"ENV PYTHONPATH={self.workdir}",
         ]
 
     def init_deps_mapping(self) -> VersionMapping:
@@ -116,7 +136,10 @@ class DockerPyRunner(ExternalRunner):
 
         dockerclient = docker.from_env()
         img, _ = dockerclient.images.build(
-            path=str(self.project), dockerfile=dfstr, rm=True
+            path=str(self.project),
+            dockerfile=dfstr,
+            rm=True,
+            tag=f"pydep/{self.img_basename}",
         )  # type: ignore
 
         output = dockerclient.containers.run(img.id, remove=True).decode()  # type: ignore
@@ -142,7 +165,10 @@ class DockerPyRunner(ExternalRunner):
 
         dockerclient = docker.from_env()
         img, _ = dockerclient.images.build(
-            path=str(self.project), dockerfile=dfstr, rm=True
+            path=str(self.project),
+            dockerfile=dfstr,
+            rm=True,
+            tag=f"pydep/{self.img_basename}-runner",
         )  # type: ignore
 
         res = []
