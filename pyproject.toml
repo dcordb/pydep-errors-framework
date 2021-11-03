@@ -12,7 +12,8 @@ dependencies = [
     "httpx",
     "typer",
     "packaging",
-    "docker"
+    "docker",
+    "appdirs"
 ]
 
 [project.optional-dependencies]

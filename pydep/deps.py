@@ -9,7 +9,7 @@ class Dependency:
         self,
         name: str,
         versions: Sequence[Version],
-        specifier: SpecifierSet,
+        specifier: SpecifierSet = SpecifierSet(),
     ) -> None:
         self.name = name
         self.versions = sorted(versions)

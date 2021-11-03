@@ -1,17 +1,20 @@
-import docker
-import docker.errors
-import enum
-from typing import Optional
+import asyncio
 from dataclasses import dataclass
-from packaging.specifiers import SpecifierSet
-from packaging.version import Version
-from typing import List, Mapping, Sequence
+import enum
 from pathlib import Path
-from pydep.depsmgr import DepsManager
-from pydep.versions import VersionRange, VersionMapping
-from pydep.deps import Dependency
-from pydep.logs import stream_logger
+from typing import Optional
+from typing import List, Mapping, Sequence
+
+import docker
 import docker.api.build
+import docker.errors
+from packaging.version import Version
+
+from pydep.deps import Dependency
+from pydep.depsmgr import DepsManager
+from pydep.logs import stream_logger
+from pydep.vercache import versions_cache
+from pydep.versions import VersionMapping, VersionRange
 
 # taken from here: https://github.com/docker/docker-py/issues/2105#issuecomment-613685891
 docker.api.build.process_dockerfile = lambda dockerfile, _: ("Dockerfile", dockerfile)  # type: ignore
@@ -144,13 +147,21 @@ class DockerPyRunner(ExternalRunner):
 
         output = dockerclient.containers.run(img.id, remove=True).decode()  # type: ignore
 
-        mapping = {}
+        deps = []
+        vers = []
         for line in output.split("\n"):
             if "==" not in line:
                 continue
 
             name, ver = line.split("==", maxsplit=1)
-            dep = Dependency(name, [], SpecifierSet())
+            deps.append(name)
+            vers.append(ver)
+
+        versions = asyncio.run(versions_cache.fetch_versions(deps))
+        mapping = {}
+
+        for name, ver in zip(deps, vers):
+            dep = Dependency(name, versions[name])
             mapping[dep] = Version(ver)
 
         return mapping

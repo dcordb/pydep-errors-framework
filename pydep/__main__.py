@@ -1,15 +1,18 @@
+from pathlib import Path
+from typing import Optional
+
 import tomli
 import typer
-from typing import Optional
 from typer import FileText
-from pathlib import Path
-from pydep.parser import parse_virtual_config
-from pydep.algorithms import Backtrack
-from pydep.tests import LinearRunner, DockerPyRunner, TestCmdsEnum
-import pydep.tests as runners
-from pydep.depsmgr import Pip
+
 from pydep import costs
 from pydep import opts
+from pydep.algorithms import Backtrack
+from pydep.depsmgr import Pip
+from pydep.parser import parse_virtual_config
+from pydep.tests import DockerPyRunner, LinearRunner, TestCmdsEnum
+import pydep.tests as runners
+from pydep.vercache import versions_cache
 
 app = typer.Typer()
 
@@ -66,6 +69,14 @@ def dockerpy(
 
     res = runner.run_all(mapping)
     print(res)
+
+
+@app.command()
+def update_versions():
+    import asyncio
+
+    deps = versions_cache.cached_deps()
+    asyncio.run(versions_cache.fetch_versions(deps, check_cache=False))
 
 
 def entrypoint():
