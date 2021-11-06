@@ -46,7 +46,7 @@ class VersionsCache:
         return json.loads(content)
 
     async def __make_versions_request(
-        self, dep: str, img: str, check_cache: bool
+        self, dep: str, img: str, check_cache: bool, semaphore: asyncio.Semaphore
     ) -> List[str]:
         if check_cache and self.has(dep):
             return self.loads(dep)
@@ -58,23 +58,27 @@ class VersionsCache:
 
         ans = [version for version in r.json()["releases"]]
 
-        loop = asyncio.get_running_loop()
-
-        with concurrent.futures.ProcessPoolExecutor() as pool:
-            ans = await loop.run_in_executor(
-                pool, self._prune_bad_versions, dep, ans, img
-            )
+        async with semaphore:
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ProcessPoolExecutor() as pool:
+                ans = await loop.run_in_executor(
+                    pool, self._prune_bad_versions, dep, ans, img
+                )
 
         self.dumps(dep, ans)
         return ans
 
     def fetch_versions(
-        self, deps: Sequence[str], img: str, check_cache: bool = True
+        self, deps: Sequence[str], img: str, check_cache: bool = True, workers: int = 2
     ) -> Dict[str, List[Version]]:
         logger.info("Fetching versions of installed dependencies...")
 
+        semaphore = asyncio.Semaphore(workers)
+
         tasks = [
-            asyncio.ensure_future(self.__make_versions_request(dep, img, check_cache))
+            asyncio.ensure_future(
+                self.__make_versions_request(dep, img, check_cache, semaphore)
+            )
             for dep in deps
         ]
 
@@ -87,9 +91,7 @@ class VersionsCache:
 
         return versions
 
-    def _prune_bad_versions(
-        self, dep: str, versions: List[str], img: str
-    ) -> List[str]:
+    def _prune_bad_versions(self, dep: str, versions: List[str], img: str) -> List[str]:
         logger.debug(f"Prunning bad versions of {dep}...")
 
         dockerfile = (
@@ -113,8 +115,12 @@ class VersionsCache:
                 tag=f"pydep/singledep",
             )  # type: ignore
 
-        res = []
-        for ver in versions:
+        vers = list(map(Version, versions))
+        vers.sort()
+
+        def good(p: int) -> bool:
+            ver = vers[p]
+
             logger.debug(f"Installing {dep}=={ver}")
             cmd = f"pip install {dep}=={ver}"
 
@@ -122,11 +128,24 @@ class VersionsCache:
                 dockerclient.containers.run(img.id, remove=True, command=cmd)  # type: ignore
             except docker.errors.ContainerError as err:
                 logger.warning(err)
+                return False
+
+            return True
+
+        st, nd = 0, len(vers) - 1
+        p = len(vers)
+
+        while st <= nd:
+            mid = (st + nd) // 2
+
+            if good(mid):
+                p = mid
+                nd = mid - 1
 
             else:
-                res.append(ver)
+                st = mid + 1
 
-        return res
+        return list(map(str, vers[p:]))
 
 
 versions_cache = VersionsCache()
