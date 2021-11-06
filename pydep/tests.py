@@ -1,4 +1,3 @@
-import asyncio
 from dataclasses import dataclass
 import enum
 from pathlib import Path
@@ -113,7 +112,7 @@ class DockerPyRunner(ExternalRunner):
         self.img_basename = img_basename
         self.workdir = "/home/pydep/app"
 
-    def _base_dockerfile(self):
+    def _base_dockerfile(self) -> List[str]:
         return [
             f"FROM {self.img}",
             "RUN groupadd pydep && useradd -mg pydep pydep",
@@ -157,7 +156,7 @@ class DockerPyRunner(ExternalRunner):
             deps.append(name)
             vers.append(ver)
 
-        versions = asyncio.run(versions_cache.fetch_versions(deps))
+        versions = versions_cache.fetch_versions(deps, self.img)
         mapping = {}
 
         for name, ver in zip(deps, vers):
@@ -175,12 +174,20 @@ class DockerPyRunner(ExternalRunner):
         logger.debug(dfstr)
 
         dockerclient = docker.from_env()
-        img, _ = dockerclient.images.build(
-            path=str(self.project),
-            dockerfile=dfstr,
-            rm=True,
-            tag=f"pydep/{self.img_basename}-runner",
-        )  # type: ignore
+
+        try:
+            img, _ = dockerclient.images.build(
+                path=str(self.project),
+                dockerfile=dfstr,
+                rm=True,
+                tag=f"pydep/{self.img_basename}-runner",
+            )  # type: ignore
+        except docker.errors.BuildError as err:
+            for line in err.build_log:
+                if "stream" in line: # temporal maybe?
+                    logger.error(line["stream"])
+
+            return [False] * len(self.tests)
 
         res = []
         for test in self.tests:

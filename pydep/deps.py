@@ -15,6 +15,9 @@ class Dependency:
         self.versions = sorted(versions)
         self.specifier = specifier
 
+        # versions that conform to specifier
+        self.spversions = [ver for ver in self.versions if ver in self.specifier]
+
     def __eq__(self, other: object) -> bool:
         if self.__class__ is other.__class__:
             return self.name == other.name
@@ -25,10 +28,3 @@ class Dependency:
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__} {self.name}"
-
-    def spec_versions(self) -> List[Version]:
-        """
-        Returns a list of versions that conforms with the specifier
-        """
-
-        return [ver for ver in self.versions if ver in self.specifier]

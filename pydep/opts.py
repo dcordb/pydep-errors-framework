@@ -4,6 +4,10 @@ from pydep.versions import VersionMapping
 AlgorithmOutput = Tuple[float, VersionMapping]
 
 
+class NotSolutionException(Exception):
+    pass
+
+
 class Optimizer:
     def __init__(self) -> None:
         self.opt = None
@@ -14,6 +18,9 @@ class Optimizer:
 
     @property
     def optimum(self):
+        if self.opt is None or self.mapping is None:
+            raise NotSolutionException
+
         return self.opt, self.mapping
 
 
