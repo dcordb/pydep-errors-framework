@@ -12,7 +12,7 @@ from packaging.version import Version
 from pydep.deps import Dependency
 from pydep.depsmgr import DepsManager
 from pydep.logs import stream_logger
-from pydep.vercache import versions_cache
+from pydep.vercache import VersionsCache
 from pydep.versions import VersionMapping, VersionRange
 
 # taken from here: https://github.com/docker/docker-py/issues/2105#issuecomment-613685891
@@ -156,7 +156,14 @@ class DockerPyRunner(ExternalRunner):
             deps.append(name)
             vers.append(ver)
 
-        versions = versions_cache.fetch_versions(deps, self.img)
+        pyver = dockerclient.containers.run(
+            img.id, remove=True, command="/bin/sh -c 'echo $PYTHON_VERSION'"
+        ).decode()  # type: ignore
+
+        logger.info(f"Container is running on Python {pyver}")
+
+        versions_cache = VersionsCache(Version(pyver))
+        versions = versions_cache.fetch_versions(deps)
         mapping = {}
 
         for name, ver in zip(deps, vers):
@@ -184,7 +191,7 @@ class DockerPyRunner(ExternalRunner):
             )  # type: ignore
         except docker.errors.BuildError as err:
             for line in err.build_log:
-                if "stream" in line: # temporal maybe?
+                if "stream" in line:  # temporal maybe?
                     logger.error(line["stream"])
 
             return [False] * len(self.tests)

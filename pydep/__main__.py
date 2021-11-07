@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
+from packaging.version import Version
 import tomli
 import typer
 from typer import FileText
@@ -14,7 +15,7 @@ from pydep.logs import stream_logger
 from pydep.parser import parse_virtual_config
 from pydep.tests import DockerPyRunner, LinearRunner, TestCmdsEnum
 import pydep.tests as runners
-from pydep.vercache import versions_cache
+from pydep.vercache import VersionsCache
 
 logger = stream_logger(__name__)
 app = typer.Typer()
@@ -109,11 +110,12 @@ def dockerpy(
 
 @app.command()
 def update_versions(
-    pytag: str = typer.Option("3.9-slim", help="Tag to use for the python image.")
+    pyver: str = typer.Option("3.9.7", help="Python version to check in dependencies")
 ):
-    img = f"python:{pytag}"
+
+    versions_cache = VersionsCache(Version(pyver))
     deps = versions_cache.cached_deps()
-    versions_cache.fetch_versions(deps, img, check_cache=False)
+    versions_cache.fetch_versions(deps, check_cache=False)
 
 
 def entrypoint():
