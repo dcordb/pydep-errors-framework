@@ -6,12 +6,18 @@ from pydep.tests import VirtualTest
 from pydep.versions import VersionRange
 
 
-def parse_virtual_config(d: dict) -> Tuple[List[Dependency], List[VirtualTest]]:
+def parse_virtual_config(d: dict) -> Tuple[List[Dependency], List[VirtualTest], List[Version]]:
     deps = []
     who = {}
+    inivers = []
     for name, vals in d["dependencies"].items():
         vals["versions"] = list(map(Version, vals["versions"]))
         vals["specifier"] = SpecifierSet(vals["specifier"])
+
+        iniver = vals.pop("iniver")
+        inivers.append(Version(iniver))
+        assert inivers[-1] in vals["versions"]
+
         dep = Dependency(name, **vals)
         who[dep.name] = dep
         deps.append(dep)
@@ -29,4 +35,4 @@ def parse_virtual_config(d: dict) -> Tuple[List[Dependency], List[VirtualTest]]:
 
         tests.append(VirtualTest(true_when))
 
-    return deps, tests
+    return deps, tests, inivers

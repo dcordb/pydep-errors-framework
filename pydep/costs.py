@@ -11,7 +11,7 @@ def version_to_float(version: Version) -> float:
 
     res = 0
     for d in tup:
-        res = res * BASE + log(d)
+        res = res * BASE + log(d + 1)
 
     return res
 

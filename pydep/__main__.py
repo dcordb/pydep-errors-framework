@@ -29,12 +29,20 @@ def virtual(
     ),
 ):
     d = tomli.loads(testcase.read())
-    deps, tests = parse_virtual_config(d)
+    deps, tests, inivers = parse_virtual_config(d)
+
+    mapping = {}
+    for dep, ver in zip(deps, inivers):
+        mapping[dep] = ver
 
     algo = getattr(algos, algorithm)
 
     solver = algo(
-        deps, LinearRunner(tests), costs.Sum(costs.version_to_float), opts.Max()
+        deps,
+        LinearRunner(tests),
+        costs.Sum(costs.version_to_float),
+        opts.Max(),
+        inimapping=mapping,
     )
     resp = solver.run()
 
@@ -102,6 +110,7 @@ def dockerpy(
         costs.Sum(costs.version_to_float),
         opts.Max(),
         iterations=iterations,
+        inimapping=mapping
     )
 
     resp = solver.run()
