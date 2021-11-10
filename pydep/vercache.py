@@ -55,33 +55,7 @@ class VersionsCache:
             r = await client.get(f"/pypi/{dep}/json")
 
         releases = r.json()["releases"]
-
-        ans = []
-        for version, data in releases.items():
-            if not data:
-                continue
-
-            three = False
-            good_req = False
-
-            for platform in data:
-                three |= "3" in platform["python_version"]
-                spec = platform["requires_python"]
-
-                if spec is None:
-                    continue
-
-                spec = SpecifierSet(spec)
-
-                if self.pyver in spec:
-                    good_req = True
-                    break
-
-            if good_req or three:
-                ans.append(version)
-
-        assert ans
-
+        ans = list(releases)
         self.dumps(dep, ans)
         return ans
 
