@@ -13,7 +13,8 @@ dependencies = [
     "typer",
     "packaging",
     "docker",
-    "appdirs"
+    "appdirs",
+    "pep517"
 ]
 
 [project.optional-dependencies]

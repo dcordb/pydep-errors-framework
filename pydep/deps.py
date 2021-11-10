@@ -1,22 +1,22 @@
 from __future__ import annotations
-from typing import List, Sequence
+from typing import Sequence
+
+from packaging.requirements import Requirement
 from packaging.version import Version
-from packaging.specifiers import SpecifierSet
 
 
 class Dependency:
     def __init__(
-        self,
-        name: str,
-        versions: Sequence[Version],
-        specifier: SpecifierSet = SpecifierSet(),
+        self, name: str, versions: Sequence[Version], org_req: Requirement
     ) -> None:
         self.name = name
         self.versions = sorted(versions)
-        self.specifier = specifier
+        self.org_req = org_req
 
         # versions that conform to specifier
-        self.spversions = [ver for ver in self.versions if ver in self.specifier]
+        self.spversions = [
+            ver for ver in self.versions if ver in self.org_req.specifier
+        ]
 
     def __eq__(self, other: object) -> bool:
         if self.__class__ is other.__class__:

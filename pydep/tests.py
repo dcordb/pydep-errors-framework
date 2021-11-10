@@ -7,7 +7,9 @@ from typing import List, Mapping, Sequence
 import docker
 import docker.api.build
 import docker.errors
+from packaging.requirements import Requirement
 from packaging.version import Version
+from pep517 import meta
 
 from pydep.deps import Dependency
 from pydep.depsmgr import DepsManager
@@ -126,7 +128,7 @@ class DockerPyRunner(ExternalRunner):
             f"ENV PYTHONPATH={self.workdir}",
         ]
 
-    def init_deps_mapping(self) -> VersionMapping:
+    def init_deps_mapping(self, top_level=True) -> VersionMapping:
         logger.info("Initializing base dockerfile")
 
         dockerfile = self._base_dockerfile()
@@ -156,9 +158,13 @@ class DockerPyRunner(ExternalRunner):
             deps.append(name)
             vers.append(ver)
 
-        pyver = dockerclient.containers.run(
-            img.id, remove=True, command="/bin/sh -c 'echo $PYTHON_VERSION'"
-        ).decode()  # type: ignore
+        pyver = (
+            dockerclient.containers.run(
+                img.id, remove=True, command="/bin/sh -c 'echo $PYTHON_VERSION'"
+            )
+            .decode()
+            .rstrip()
+        )  # type: ignore
 
         logger.info(f"Container is running on Python {pyver}")
 
@@ -166,8 +172,24 @@ class DockerPyRunner(ExternalRunner):
         versions = versions_cache.fetch_versions(deps)
         mapping = {}
 
+        dist = meta.load(self.project)
+
+        reqs = {}
+        for line in dist.requires or []:
+            req = Requirement(line)
+            req.name = req.name.lower().replace("-", "_")
+            reqs[req.name] = req
+
         for name, ver in zip(deps, vers):
-            dep = Dependency(name, versions[name])
+            dep = Dependency(name, versions[name], Requirement(f"{name}=={ver}"))
+
+            if top_level:
+                if name in reqs:
+                    dep = Dependency(name, versions[name], reqs[name])
+
+                else:
+                    continue
+
             mapping[dep] = Version(ver)
 
         return mapping
@@ -204,7 +226,7 @@ class DockerPyRunner(ExternalRunner):
 
             try:
                 dockerclient.containers.run(img.id, remove=True, command=cmd)
-            except docker.errors.ContainerError as err:
+            except Exception as err:
                 logger.warning(err)
                 success = False
 

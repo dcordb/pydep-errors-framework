@@ -6,7 +6,9 @@ from pydep.tests import VirtualTest
 from pydep.versions import VersionRange
 
 
-def parse_virtual_config(d: dict) -> Tuple[List[Dependency], List[VirtualTest], List[Version]]:
+def parse_virtual_config(
+    d: dict,
+) -> Tuple[List[Dependency], List[VirtualTest], List[Version]]:
     deps = []
     who = {}
     inivers = []

@@ -81,6 +81,9 @@ def dockerpy(
     iterations: int = typer.Option(
         100, help="Iterations to run the selected algorithm (if applies)"
     ),
+    only_top_level: bool = typer.Option(
+        True, help="Use only top level dependencies to install"
+    ),
 ):
     cmd = getattr(runners, test_runner)(test_cmd)
 
@@ -91,7 +94,7 @@ def dockerpy(
         img_basename = path.stem
 
     runner = DockerPyRunner(path, depsmgr, [cmd], img_basename, pytag)
-    mapping = runner.init_deps_mapping()
+    mapping = runner.init_deps_mapping(top_level=only_top_level)
 
     logger.debug(mapping)
 
@@ -110,7 +113,7 @@ def dockerpy(
         costs.Sum(costs.version_to_float),
         opts.Max(),
         iterations=iterations,
-        inimapping=mapping
+        inimapping=mapping,
     )
 
     resp = solver.run()

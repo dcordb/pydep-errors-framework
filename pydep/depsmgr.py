@@ -1,4 +1,8 @@
+import copy
 from typing import List
+
+from packaging.specifiers import SpecifierSet
+
 from pydep.versions import VersionMapping
 
 
@@ -26,6 +30,9 @@ class Pip(DepsManager):
         deps = []
 
         for dep, ver in mapping.items():
-            deps.append(f"{dep.name}=={ver}")
+            req = copy.copy(dep.org_req)
+            req.specifier = SpecifierSet(f"=={ver}")
+            req.marker = None
+            deps.append(str(req))
 
         return f"pip install {' '.join(deps)}"
