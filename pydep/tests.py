@@ -128,7 +128,9 @@ class DockerPyRunner(ExternalRunner):
             f"ENV PYTHONPATH={self.workdir}",
         ]
 
-    def init_deps_mapping(self, top_level=True) -> VersionMapping:
+    def init_deps_mapping(
+        self, top_level=True, cache_min_year: int = 2018
+    ) -> VersionMapping:
         logger.info("Initializing base dockerfile")
 
         dockerfile = self._base_dockerfile()
@@ -168,7 +170,7 @@ class DockerPyRunner(ExternalRunner):
 
         logger.info(f"Container is running on Python {pyver}")
 
-        versions_cache = VersionsCache(Version(pyver))
+        versions_cache = VersionsCache(Version(pyver), loyear=cache_min_year)
         versions = versions_cache.fetch_versions(deps)
         mapping = {}
 

@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 import json
 from pathlib import Path
 from typing import Dict, List, Sequence
@@ -8,7 +9,6 @@ import docker
 import docker.api.build
 import docker.errors
 import httpx
-from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
 from pydep.logs import stream_logger
@@ -18,9 +18,10 @@ logger = stream_logger(__name__)
 
 
 class VersionsCache:
-    def __init__(self, pyver: Version) -> None:
+    def __init__(self, pyver: Version, loyear: int = 2018) -> None:
         self.pyver = pyver
         self.dir = Path(user_cache_dir(appname="pydep")) / str(self.pyver)
+        self.loyear = loyear
 
         if not self.dir.exists():
             self.dir.mkdir(parents=True)
@@ -55,7 +56,17 @@ class VersionsCache:
             r = await client.get(f"/pypi/{dep}/json")
 
         releases = r.json()["releases"]
-        ans = list(releases)
+
+        ans = []
+        for ver, data in releases.items():
+            mxyear = 0
+            for dict in data:
+                upload_time = datetime.fromisoformat(dict["upload_time"])
+                mxyear = max(mxyear, upload_time.year)
+
+            if mxyear >= self.loyear:
+                ans.append(ver)
+
         self.dumps(dep, ans)
         return ans
 

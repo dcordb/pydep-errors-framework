@@ -84,6 +84,9 @@ def dockerpy(
     only_top_level: bool = typer.Option(
         True, help="Use only top level dependencies to install"
     ),
+    cache_min_year: int = typer.Option(
+        2018, help="Minimum year to admit for a version"
+    ),
 ):
     cmd = getattr(runners, test_runner)(test_cmd)
 
@@ -94,7 +97,9 @@ def dockerpy(
         img_basename = path.stem
 
     runner = DockerPyRunner(path, depsmgr, [cmd], img_basename, pytag)
-    mapping = runner.init_deps_mapping(top_level=only_top_level)
+    mapping = runner.init_deps_mapping(
+        top_level=only_top_level, cache_min_year=cache_min_year
+    )
 
     logger.debug(mapping)
 
@@ -122,10 +127,13 @@ def dockerpy(
 
 @app.command()
 def update_versions(
-    pyver: str = typer.Option("3.9.7", help="Python version to check in dependencies")
+    pyver: str = typer.Option("3.9.7", help="Python version to check in dependencies"),
+    cache_min_year: int = typer.Option(
+        2018, help="Minimum year to admit for a version"
+    ),
 ):
 
-    versions_cache = VersionsCache(Version(pyver))
+    versions_cache = VersionsCache(Version(pyver), loyear=cache_min_year)
     deps = versions_cache.cached_deps()
     versions_cache.fetch_versions(deps, check_cache=False)
 
