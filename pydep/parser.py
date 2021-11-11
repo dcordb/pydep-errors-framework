@@ -1,5 +1,6 @@
 from typing import Tuple, List
 from packaging.version import Version
+from packaging.requirements import Requirement
 from packaging.specifiers import SpecifierSet
 from pydep.deps import Dependency
 from pydep.tests import VirtualTest
@@ -15,6 +16,8 @@ def parse_virtual_config(
     for name, vals in d["dependencies"].items():
         vals["versions"] = list(map(Version, vals["versions"]))
         vals["specifier"] = SpecifierSet(vals["specifier"])
+        vals["org_req"] = Requirement(f"{name}{vals['specifier']}")
+        vals.pop("specifier")
 
         iniver = vals.pop("iniver")
         inivers.append(Version(iniver))
