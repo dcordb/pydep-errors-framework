@@ -183,6 +183,7 @@ class DockerPyRunner(ExternalRunner):
             reqs[req.name] = req
 
         for name, ver in zip(deps, vers):
+            name = name.lower().replace("-", "_")
             dep = Dependency(name, versions[name], Requirement(f"{name}=={ver}"))
 
             if top_level:
