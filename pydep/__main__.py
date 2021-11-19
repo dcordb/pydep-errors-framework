@@ -11,13 +11,16 @@ from pydep import opts
 from pydep.algorithms import AlgorithmsAvailable
 import pydep.algorithms as algos
 from pydep.depsmgr import Pip
-from pydep.logs import stream_logger
+from pydep.logs import configure_logger, stream_logger
 from pydep.parser import parse_virtual_config
 from pydep.tests import DockerPyRunner, LinearRunner, TestCmdsEnum
 import pydep.tests as runners
+from pydep.tests import logger as tests_logger
 from pydep.vercache import VersionsCache
 
 logger = stream_logger(__name__)
+configure_logger(tests_logger)
+
 app = typer.Typer()
 
 
@@ -26,6 +29,9 @@ def virtual(
     testcase: FileText,
     algorithm: AlgorithmsAvailable = typer.Option(
         AlgorithmsAvailable.backtrack.value, help="Algorithm to use"
+    ),
+    iterations: int = typer.Option(
+        100, help="Iterations to run the selected algorithm (if applies)"
     ),
 ):
     d = tomli.loads(testcase.read())
@@ -43,6 +49,7 @@ def virtual(
         costs.Sum(costs.version_to_float),
         opts.Max(),
         inimapping=mapping,
+        iterations=iterations,
     )
     resp = solver.run()
 

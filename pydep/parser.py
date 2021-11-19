@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Tuple, List
 from packaging.version import Version
 from packaging.requirements import Requirement
@@ -10,6 +11,8 @@ from pydep.versions import VersionRange
 def parse_virtual_config(
     d: dict,
 ) -> Tuple[List[Dependency], List[VirtualTest], List[Version]]:
+    d = deepcopy(d)
+
     deps = []
     who = {}
     inivers = []

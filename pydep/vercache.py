@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime
 import json
+import logging
 from pathlib import Path
 from typing import Dict, List, Sequence
 
@@ -11,10 +12,8 @@ import docker.errors
 import httpx
 from packaging.version import Version
 
-from pydep.logs import stream_logger
-
 docker.api.build.process_dockerfile = lambda dockerfile, _: ("Dockerfile", dockerfile)  # type: ignore
-logger = stream_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class VersionsCache:

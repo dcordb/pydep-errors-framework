@@ -1,5 +1,5 @@
 dev:
-	flit install -s --deps=develop
+	flit install -s --deps=develop --extras stats
 
 format:
 	black .

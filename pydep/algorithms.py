@@ -1,16 +1,16 @@
-import enum
-import random
 import bisect
-from typing import Sequence, Optional
+import enum
+import logging
+import random
+from typing import Sequence
 
 from pydep import opts
 from pydep.costs import CostFunction
 from pydep.deps import Dependency
-from pydep.logs import stream_logger
 from pydep.tests import TestRunner
 from pydep.versions import VersionMapping
 
-logger = stream_logger(__name__)
+logger = logging.getLogger(__name__)
 random.seed(0)  # debug
 
 
@@ -44,14 +44,39 @@ class Algorithm:
 
 
 class Backtrack(Algorithm):
+    desc_name = "Backtracking"
+
+    class StopBacktrack(Exception):
+        pass
+
+    def __init__(
+        self,
+        deps: Sequence[Dependency],
+        runner: TestRunner,
+        cost_func: CostFunction,
+        optimizer: opts.Optimizer,
+        **kwargs,
+    ) -> None:
+        super().__init__(deps, runner, cost_func, optimizer)
+        self.iterations = kwargs.get("iterations", 1000)
+
     def run(self):
-        self._run(0, {})
+        try:
+            self._run(0, {})
+        except Backtrack.StopBacktrack:
+            pass
+
         return self.optimizer.optimum
 
     def _run(self, p, pinned: VersionMapping):
         if p >= len(self.deps):
             if all(self.runner.run_all(pinned)):
                 self.optimizer.relax(self.cost_func(pinned), pinned.copy())
+
+            self.iterations -= 1
+
+            if self.iterations <= 0:
+                raise Backtrack.StopBacktrack()
 
             return
 
@@ -63,6 +88,8 @@ class Backtrack(Algorithm):
 
 
 class Random(Algorithm):
+    desc_name = "Randomized"
+
     def __init__(
         self,
         deps: Sequence[Dependency],
@@ -94,6 +121,8 @@ class Random(Algorithm):
 
 
 class PSO(Algorithm):
+    desc_name = "PSO"
+
     def __init__(
         self,
         deps: Sequence[Dependency],

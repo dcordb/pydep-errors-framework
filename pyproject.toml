@@ -19,6 +19,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["black"]
+stats = ["faker", "pylatex"]
 
 [project.scripts]
 pydep = "pydep.__main__:entrypoint"

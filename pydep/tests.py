@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import enum
+import logging
 from pathlib import Path
 from typing import Optional
 from typing import List, Mapping, Sequence
@@ -13,13 +14,12 @@ from pep517 import meta
 
 from pydep.deps import Dependency
 from pydep.depsmgr import DepsManager
-from pydep.logs import stream_logger
 from pydep.vercache import VersionsCache
 from pydep.versions import VersionMapping, VersionRange
 
 # taken from here: https://github.com/docker/docker-py/issues/2105#issuecomment-613685891
 docker.api.build.process_dockerfile = lambda dockerfile, _: ("Dockerfile", dockerfile)  # type: ignore
-logger = stream_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class Test:
