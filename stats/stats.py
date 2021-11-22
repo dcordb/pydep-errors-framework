@@ -138,7 +138,7 @@ def it_vs_algos_table(caption: str, label: str):
     table.add_caption(caption)
     table.append(label)
 
-    dbox = Command("diagbox", arguments=["Iteraciones", "Algoritmos"])
+    dbox = Command("diagbox", arguments=["Iters.", "Algos."])
 
     tabular.add_hline()
     tabular.add_row([dbox] + list(data))

@@ -8,7 +8,7 @@ from typer import FileText
 
 from pydep import costs
 from pydep import opts
-from pydep.algorithms import AlgorithmsAvailable
+from pydep.algorithms import AlgorithmsAvailable, logger as algo_logger
 import pydep.algorithms as algos
 from pydep.depsmgr import Pip
 from pydep.logs import configure_logger, stream_logger
@@ -20,6 +20,7 @@ from pydep.vercache import VersionsCache
 
 logger = stream_logger(__name__)
 configure_logger(tests_logger)
+configure_logger(algo_logger)
 
 app = typer.Typer()
 
