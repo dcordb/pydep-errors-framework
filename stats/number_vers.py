@@ -45,7 +45,9 @@ def gen_table_fastapi():
     extras = ["test", "doc", "dev", "all"]
     mapping = get_mapping(path, extras, "fastapi")
 
-    caption = "Número de versiones de cada una de las dependencias declaradas."
+    caption = (
+        "Número de versiones de cada una de las dependencias declaradas de fastapi."
+    )
     label = "table:fastapi"
     table = make_table(caption, label)
 
@@ -68,7 +70,7 @@ def gen_table_flit():
     extras = ["test"]
     mapping = get_mapping(path, extras, "flit")
 
-    caption = "Número de versiones de cada una de las dependencias declaradas."
+    caption = "Número de versiones de cada una de las dependencias declaradas de flit."
     label = "table:flit"
     table = make_table(caption, label)
 
