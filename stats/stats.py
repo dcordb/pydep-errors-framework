@@ -1,18 +1,20 @@
-from pydep import algorithms
-from pydep.parser import parse_virtual_config
-from pydep import costs
-from pydep import opts
-from pydep.tests import LinearRunner
+import logging
+import random
+from typing import List
+
 from faker import Faker
 from packaging.version import Version
-import random
-import logging
-from pylatex.labelref import Label
-from pylatex.table import Tabular, Table
 from pylatex import Command
+from pylatex.labelref import Label
+from pylatex.table import Table, Tabular
 
-Faker.seed(0)
-random.seed(0)
+from pydep import algorithms
+from pydep import costs
+from pydep import opts
+from pydep.parser import parse_virtual_config
+from pydep.tests import LinearRunner
+
+ITS = [15, 40, 80, 150, 500, 700, 1000, 3000, 5000]
 
 logger = logging.getLogger(__name__)
 handler = logging.FileHandler("stats.log", mode="w")
@@ -21,6 +23,11 @@ handler.setFormatter(
 )
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
+
+
+def freeze_randoms():
+    Faker.seed(0)
+    random.seed(0)
 
 
 def gen_version() -> str:
@@ -62,7 +69,23 @@ def generate(deps: int, t: int) -> dict:
     return ans
 
 
-ITS = [15, 40, 80, 150, 500, 700, 1000, 3000, 5000]
+def prepare_algo(algo_cls, testcase, iterations):
+    ldeps, tests, inivers = parse_virtual_config(testcase)
+
+    mapping = {}
+    for dep, ver in zip(ldeps, inivers):
+        mapping[dep] = ver
+
+    solver = algo_cls(
+        ldeps,
+        LinearRunner(tests),
+        costs.Sum(costs.version_to_float),
+        opts.Max(),
+        inimapping=mapping,
+        iterations=iterations,
+    )
+
+    return solver
 
 
 def run(total: int, deps: int, t: int):
@@ -84,20 +107,7 @@ def run(total: int, deps: int, t: int):
             ssum = 0
 
             for tset in tsets:
-                ldeps, tests, inivers = parse_virtual_config(tset)
-
-                mapping = {}
-                for dep, ver in zip(ldeps, inivers):
-                    mapping[dep] = ver
-
-                solver = algo(
-                    ldeps,
-                    LinearRunner(tests),
-                    costs.Sum(costs.version_to_float),
-                    opts.Max(),
-                    inimapping=mapping,
-                    iterations=it,
-                )
+                solver = prepare_algo(algo, tset, it)
 
                 try:
                     resp = solver.run()
@@ -125,11 +135,11 @@ def run(total: int, deps: int, t: int):
     return res
 
 
-def it_vs_algos_table(caption: str, label: str):
-    spec = "|l" + "|c" * len(data) + "|"
-    label = Label(label)
+def make_table(algos: List[str], diagbox: List[str], caption: str, label: str):
+    spec = "|l" + "|c" * len(algos) + "|"
+    label = Label(label)  # type: ignore
     table = Table()
-    center = Command('centering')
+    center = Command("centering")
 
     tabular = Tabular(spec)
 
@@ -138,20 +148,27 @@ def it_vs_algos_table(caption: str, label: str):
     table.add_caption(caption)
     table.append(label)
 
-    dbox = Command("diagbox", arguments=["Iters.", "Algos."])
+    dbox = Command("diagbox", arguments=diagbox)
 
     tabular.add_hline()
-    tabular.add_row([dbox] + list(data))
+    tabular.add_row([dbox] + algos)  # type: ignore
 
     return table
 
 
 def gen_table_percent(data: dict):
-    tpercent = it_vs_algos_table(
-        "Porciento de proyectos con solución encontrada.", "table:percent"
+    tpercent = make_table(
+        list(data),
+        ["Iters.", "Algos."],
+        "Porciento de proyectos con solución encontrada.",
+        "table:percent",
     )
-    tavg = it_vs_algos_table(
-        "Promedio de la puntuación obtenida de todos los proyectos.", "table:avg"
+
+    tavg = make_table(
+        list(data),
+        ["Iters.", "Algos."],
+        "Promedio de la puntuación obtenida de todos los proyectos.",
+        "table:avg",
     )
 
     for it in ITS:
@@ -184,5 +201,6 @@ def gen_table_percent(data: dict):
 
 
 if __name__ == "__main__":
+    freeze_randoms()
     data = run(15, 20, 10)
     gen_table_percent(data)

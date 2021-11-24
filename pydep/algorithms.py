@@ -138,6 +138,7 @@ class SimAnn(Algorithm):
         self.iterations = kwargs.get("iterations", 1000)
         self.prob_restart: float = kwargs.get("prob_restart", 0.1)
         self._delta = 1 if isinstance(self.optimizer, opts.Min) else -1
+        self.optimizer = opts.Min()
 
     def run(self):
         s = self.inimapping
