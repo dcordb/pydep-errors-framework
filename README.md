@@ -2,6 +2,11 @@
 
 A framework that tries to fix dependency errors of Python projects.
 
+### Thesis
+
+This framework was the result of my work on my bachelor's thesis which you can
+find [here](resources/thesis.pdf) (in Spanish).
+
 ### Usage
 
 Checkout `pydep --help` for details.
